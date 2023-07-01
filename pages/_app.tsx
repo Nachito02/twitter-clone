@@ -1,6 +1,8 @@
 import Layout from '@/components/Layout'
 import Modal from '@/components/Modal'
 import LoginModal from '@/components/modals/LoginModal'
+import EditModal from '@/components/modals/EditModal'
+
 import RegisterModal from '@/components/modals/RegisterModal'
 import '@/styles/globals.css'
 import { Toaster } from 'react-hot-toast'
@@ -13,6 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <Toaster />
       <LoginModal />
       <RegisterModal />
+      <EditModal />
 
       <Layout>
         <Component {...pageProps} />
