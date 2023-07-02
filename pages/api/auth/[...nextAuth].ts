@@ -1,54 +1,55 @@
-import  NextAuth  from "next-auth/next";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "@/libs/prismadb";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt"
+import NextAuth, { AuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
 
+import prisma from "@/libs/prismadb"
 
-export default NextAuth({
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "email", type: "text" },
-        password: { label: "password", type: "password" },
+        email: { label: 'email', type: 'text' },
+        password: { label: 'password', type: 'password' }
       },
-
-      async authorize(crendentials) {
-        if(!crendentials?.email || !crendentials?.password) {
-            throw new Error('Invalid credentials')
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Invalid credentials');
         }
 
         const user = await prisma.user.findUnique({
-            where: {
-                email:crendentials.email
-            }
+          where: {
+            email: credentials.email
+          }
         });
 
-        if(!user || !user?.hashedPassword){
-            throw new Error('Invalid credentials')
+        if (!user || !user?.hashedPassword) {
+          throw new Error('Invalid credentials');
         }
 
-        const isCorrectPassowrd = await bcrypt.compare(
-            crendentials.password, user.hashedPassword
-        )
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.hashedPassword
+        );
 
-        if(!isCorrectPassowrd) {
-            throw new Error('Invalid Credentials')
+        if (!isCorrectPassword) {
+          throw new Error('Invalid credentials');
         }
 
-        return user
+        return user;
       }
-    }),
+    })
   ],
-
   debug: process.env.NODE_ENV === 'development',
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
   },
   jwt: {
     secret: process.env.NEXTAUTH_JWT_SECRET,
   },
-  secret: process.env.NEXTAUTH_SECRET
-});
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+export default NextAuth(authOptions);
