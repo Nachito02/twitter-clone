@@ -7,6 +7,7 @@ import React, { useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import Button from "./Button";
 import Avatar from "./Avatar";
+import usePost from "@/hooks/usePost";
 
 interface FormProps {
   placeholder: string;
@@ -18,20 +19,24 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
   const loginModal = useLoginModal();
 
   const { data: currentUser } = userCurrentUser();
-  const { mutate: mutatePosts } = usePosts(postId as string);
+  const { mutate: mutatePosts } = usePosts();
   const [body, setBody] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const {mutate: mutatePost} = usePost(postId as string)
   const onSubmit = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      await axios.post("/api/posts", { body });
+      const url = isComment ? `/api/comments?postId=${postId}` : "/api/posts";
+
+      await axios.post(url, { body });
 
       toast.success("Tweet created");
 
       setBody("");
       mutatePosts();
+      mutatePost();
+
     } catch (error) {
       console.log(error);
 
@@ -39,7 +44,7 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [body, mutatePosts]);
+  }, [body, mutatePosts, isComment, postId]);
 
   return (
     <div className="border-b-[1px] border-neutral-800 px-5 py-2">
@@ -71,10 +76,14 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
               "
               placeholder={placeholder}
             ></textarea>
-            <hr  className="opacity-0 peer-focus:opacity-100 h-[1px] w-full border-neutral-800 transition"/>
+            <hr className="opacity-0 peer-focus:opacity-100 h-[1px] w-full border-neutral-800 transition" />
 
             <div className="mt-4 flex flex-row justify-end">
-              <Button label="Tweet" disabled={isLoading || !body} onClick={onSubmit} />
+              <Button
+                label="Tweet"
+                disabled={isLoading || !body}
+                onClick={onSubmit}
+              />
             </div>
           </div>
         </div>
