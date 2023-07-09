@@ -11,12 +11,10 @@ export default async function handler(
   }
 
   try {
-    const userId = req.method === 'POST' ? req.body.userId : req.query.userId;
-
-
+    const userId = req.method === "POST" ? req.body.userId : req.query.userId;
 
     const { currentUser } = await serverAuth(req, res);
-    
+
     if (!userId || typeof userId !== "string") {
       throw new Error("Invalid ID");
     }
@@ -35,11 +33,30 @@ export default async function handler(
 
     if (req.method === "POST") {
       updatedFollowingIds.push(userId);
+
+      try {
+        await prisma.notification.create({
+          data: {
+            body: "Someone followed you",
+            userId,
+          },
+        });
+
+        await prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            hasNotifications: true,
+          },
+        });
+      } catch (error) {
+        console.log(error)
+      }
     }
 
     if (req.method === "DELETE") {
-
-        console.log(req)
+      console.log(req);
 
       updatedFollowingIds = updatedFollowingIds.filter(
         (followingId) => followingId !== userId
